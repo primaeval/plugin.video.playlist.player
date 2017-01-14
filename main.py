@@ -73,7 +73,7 @@ def clear_playlists():
     playlists = plugin.get_storage('playlists')
     playlists.clear()
     xbmc.executebuiltin('Container.Refresh')
-    
+
 @plugin.route('/import_playlists')
 def import_playlists():
     playlists = plugin.get_storage('playlists')
@@ -154,10 +154,17 @@ def stream_search(channel):
     playlists = plugin.get_storage('playlists')
 
     streams = {}
-    for playlist in sorted(playlists):
+    for playlist in sorted(playlists.keys()):
+        if playlist not in playlists:
+            continue
         url = playlists[playlist]
         streams[playlist] = {}
-        data = requests.get(url).content
+        try:data = requests.get(url).content
+        except:
+            if plugin.get_setting('delete') == 'true':
+                log("Delete: "+playlist)
+                del playlists[playlist]
+            continue
         matches = re.findall(r'#EXTINF:.*?,(.*?)\n(.*?)\n',data,flags=(re.DOTALL | re.MULTILINE))
         for name,url in matches:
             streams[playlist][url.strip()] = name.strip()
@@ -172,13 +179,28 @@ def stream_search(channel):
             if label_search in channel_search or channel_search in label_search:
                 stream_list.append((id,f,label))
     labels = ["[%s] %s" % (x[0],x[2]) for x in stream_list]
-    d = xbmcgui.Dialog()
-    which = d.select(channel, labels)
-    if which == -1:
-        return
-    stream_name = stream_list[which][2]
-    stream_link = stream_list[which][1]
-    plugin.set_resolved_url(stream_link)
+    if plugin.get_setting('dialog') == 'true':
+        d = xbmcgui.Dialog()
+        which = d.select(channel, labels)
+        if which == -1:
+            return
+        stream_name = stream_list[which][2]
+        stream_link = stream_list[which][1]
+        plugin.set_resolved_url(stream_link)
+    else:
+        items = []
+        for (playlist,url,label) in sorted(stream_list):
+            context_items = []
+            context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Remove playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(remove_this_playlist, playlist=playlist))))
+            items.append(
+            {
+                'label': "[%s] %s" % (playlist,label),
+                'path': url,
+                'thumbnail':get_icon_path('tv'),
+                'is_playable': True,
+                'context_menu': context_items,
+            })
+        return items
 
 @plugin.route('/export_channels')
 def export_channels():
@@ -208,7 +230,7 @@ def channel_player():
             'label': channel,
             'path': plugin.url_for('stream_search',channel=channel),
             'thumbnail':get_icon_path('tv'),
-            'is_playable': True,
+            'is_playable': plugin.get_setting('dialog') == 'true',
             'context_menu': context_items,
         })
     return items

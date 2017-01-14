@@ -1,5 +1,7 @@
 <settings>
 <category label="Display">
+<setting id="dialog" label="Use Dialog Box" type="bool" default="true" />
+<setting id="delete" label="Delete Unresponsive Playlists" type="bool" default="false" />
 <setting id="view_mode" label="View Mode" type="number" default="51" />
 </category>
 </settings>
