@@ -189,7 +189,7 @@ def stream_search(channel):
         plugin.set_resolved_url(stream_link)
     else:
         items = []
-        for (playlist,url,label) in sorted(stream_list):
+        for (playlist,url,label) in sorted(stream_list, key=lambda x: (x[0],x[2])):
             context_items = []
             context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Remove playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(remove_this_playlist, playlist=playlist))))
             items.append(
