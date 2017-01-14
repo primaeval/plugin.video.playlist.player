@@ -73,6 +73,30 @@ def clear_playlists():
     playlists = plugin.get_storage('playlists')
     playlists.clear()
     xbmc.executebuiltin('Container.Refresh')
+    
+@plugin.route('/import_playlists')
+def import_playlists():
+    playlists = plugin.get_storage('playlists')
+    f = xbmcvfs.File('special://profile/addon_data/plugin.video.playlist.player/playlists.ini','rb')
+    lines = f.read().splitlines()
+    for line in lines:
+        playlist_url = line.split('=',1)
+        if len(playlist_url) == 2:
+            name = playlist_url[0]
+            url = playlist_url[1]
+            playlists[name] = url
+    xbmc.executebuiltin('Container.Refresh')
+
+@plugin.route('/export_playlists')
+def export_playlists():
+    playlists = plugin.get_storage('playlists')
+
+    f = xbmcvfs.File('special://profile/addon_data/plugin.video.playlist.player/playlists.ini','wb')
+    for name in sorted(playlists):
+        url = playlists[name]
+        s = "%s=%s\n" % (name,url)
+        f.write(s)
+    f.close()
 
 @plugin.route('/add_channel')
 def add_channel():
@@ -128,7 +152,7 @@ def import_channels():
 @plugin.route('/stream_search/<channel>')
 def stream_search(channel):
     playlists = plugin.get_storage('playlists')
-    
+
     streams = {}
     for playlist in sorted(playlists):
         url = playlists[playlist]
@@ -160,7 +184,7 @@ def stream_search(channel):
 def export_channels():
     channels = plugin.get_storage('channels')
 
-    f = xbmcvfs.File('special://profile/addon_data/plugin.video.addons.ini.player/export.ini','wb')
+    f = xbmcvfs.File('special://profile/addon_data/plugin.video.playlist.player/channels.ini','wb')
     for channel in sorted(channels):
         url = plugin.url_for('stream_search',channel=channel)
         s = "%s=%s\n" % (channel,url)
@@ -219,6 +243,8 @@ def playlists():
         context_items = []
         context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Add playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(add_playlist))))
         context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Remove playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(remove_this_playlist, playlist=playlist))))
+        context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Import playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(import_playlists))))
+        context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Export playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(export_playlists))))
         context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Clear playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(clear_playlists))))
         items.append(
         {
@@ -236,6 +262,8 @@ def index():
     context_items = []
     context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Add Playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(add_playlist))))
     context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Remove Playlist', 'XBMC.RunPlugin(%s)' % (plugin.url_for(remove_playlist))))
+    context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Import playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(import_playlists))))
+    context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Export playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(export_playlists))))
     context_items.append(("[COLOR yellow][B]%s[/B][/COLOR] " % 'Clear Playlists', 'XBMC.RunPlugin(%s)' % (plugin.url_for(clear_playlists))))
     items.append(
     {
