@@ -159,7 +159,7 @@ def stream_search(channel):
             continue
         url = playlists[playlist]
         streams[playlist] = {}
-        try:data = requests.get(url).content
+        try:data = requests.get(url, verify=False).content
         except:
             if plugin.get_setting('delete') == 'true':
                 log("Delete: "+playlist)
@@ -239,7 +239,7 @@ def channel_player():
 def playlist_listing(playlist):
     playlists = plugin.get_storage('playlists')
     url = playlists[playlist]
-    data = requests.get(url).content
+    data = requests.get(url, verify=False).content
     matches = re.findall(r'#EXTINF:.*?,(.*?)\n(.*?)\n',data,flags=(re.DOTALL | re.MULTILINE))
     urls = {}
     for name,url in matches:
